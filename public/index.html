@@ -93,24 +93,27 @@
         async function openDetrack() {
           console.log("VW_START_DETRACK");
           return new Promise(async (resolve, reject) => {
-            if (window.Fusion) {
-              console.debug("P_ANDROID");
-              Fusion.onmessage = (event) => {
-                if (!event) return;
-                console.log("Receiving message : ", event);
+            const context = getContext()
+              context.onmessage = (event) => {
                 resolve(JSON.parse(event.data));
               };
-              Fusion.postMessage("fusion-internal:detrack");
-            } else if (window?.webkit?.messageHandlers?.fusion) {
-              console.debug("P_IOS");
-              const payload = "fusion-internal:detrack";
-              const response =
-                await window.webkit.messageHandlers.fusion.postMessage(payload);
-              console.debug("WV_RESPONSE", response);
-              resolve(response.data);
+              const response = await context.postMessage("fusion-internal:detrack");
+              if(response) {
+                resolve(response.data);
+              }
+            })
+          };
+        
+
+          function getContext() {
+            if(window.Fusion)
+              return Fusion
+            if(window.webkit?.messageHandlers?.fusion) {
+                return window.webkit.messageHandlers.fusion;
             }
-          });
-        }
+            throw Error("No Fusion SDK found")
+          }
+        
       </script>
     </div>
   </body>
