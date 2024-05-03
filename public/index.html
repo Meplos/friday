@@ -91,13 +91,24 @@
         }
 
         async function openDetrack() {
-          return new Promise((resolve, reject) => {
-            Fusion.onmessage = (event) => {
-              if (!event) return;
-              console.log("Receiving message : ", event);
-              resolve(JSON.parse(event.data));
-            };
-            Fusion.postMessage("fusion-internal:detrack");
+          console.log("VW_START_DETRACK");
+          return new Promise(async (resolve, reject) => {
+            if (window.Fusion) {
+              console.debug("P_ANDROID");
+              Fusion.onmessage = (event) => {
+                if (!event) return;
+                console.log("Receiving message : ", event);
+                resolve(JSON.parse(event.data));
+              };
+              Fusion.postMessage("fusion-internal:detrack");
+            } else if (window?.webkit?.messageHandlers?.fusion) {
+              console.debug("P_IOS");
+              const payload = "fusion-internal:detrack";
+              const response =
+                await window.webkit.messageHandlers.fusion.postMessage(payload);
+              console.debug("WV_RESPONSE", response);
+              resolve(response.data);
+            }
           });
         }
       </script>
